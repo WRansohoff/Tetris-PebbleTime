@@ -42,8 +42,9 @@ static bool lost = false;
 static bool can_load = false;
 static bool load_choice = false;
 static int rotation = 0;
-static int tick_time = 700;
-static int tick_fall_time = 100;
+static int max_tick = 500;
+static int tick_time;
+static int tick_interval = 30;
 static int blockType = -1;
 static int nextBlockType = -1;
 static int blockX = 5;
@@ -114,7 +115,7 @@ static void drop_block() {
           lines_cleared += 1;
           if (level < 10 && lines_cleared >= (10 * level)) {
             level += 1;
-            tick_time -= 50;
+            tick_time -= tick_interval;
             update_num_layer (level, levelStr, level_layer);
           }
           update_num_layer (lines_cleared, scoreStr, score_layer);
@@ -162,12 +163,6 @@ static void game_tick(void *data) {
   s_timer = app_timer_register(tick_time, game_tick, NULL);
 }
 
-static void fall_tick(void *data) {
-  if (!fastfall) { return; }
-  drop_block();
-  s_fall_timer = app_timer_register(tick_fall_time, fall_tick, NULL);
-}
-
 static void setup_game() {
     playing = true;
     Layer *window_layer = window_get_root_layer(window);
@@ -183,6 +178,7 @@ static void setup_game() {
     update_num_layer(lines_cleared, scoreStr, score_layer);
     text_layer_set_text(level_label_layer, "Level");
     update_num_layer(level, levelStr, level_layer);
+    tick_time = max_tick;
     nextBlockType = rand() % 7;
     layer_mark_dirty(s_bg_layer);
     layer_mark_dirty(s_left_pane_layer);
@@ -194,7 +190,9 @@ static void load_game() {
   // We already know that we have valid data (can_load).
   lines_cleared = persist_read_int(SCORE_KEY);
   level = (lines_cleared / 10) + 1;
-  tick_time = 700 - (50 * level);
+  update_num_layer(lines_cleared, scoreStr, score_layer);
+  update_num_layer(level, levelStr, level_layer);
+  tick_time = max_tick - (tick_interval * level);
   persist_read_data(GRID_KEY, grid, sizeof(grid));
   persist_read_data(GRID_COL_KEY, grid_col, sizeof(grid_col));
   blockType = persist_read_int(BLOCK_TYPE_KEY);
@@ -202,12 +200,15 @@ static void load_game() {
   blockX = persist_read_int(BLOCK_X_KEY);
   blockY = persist_read_int(BLOCK_Y_KEY);
   make_block(block, blockType, blockX, blockY);
+  make_block(nextBlock, nextBlockType, nextBlockX, nextBlockY);
   rotation = persist_read_int(ROTATION_KEY);
-  for (int i=0; i<rotation; i++) {
-    GPoint rPoints[4];
-    rotate_block(rPoints, block, blockType, i);
-    for (int j=0; j<4; j++) {
-      block[j] = rPoints[j];
+  if (rotation != 0) {
+    for (int i=0; i<rotation; i++) {
+      GPoint rPoints[4];
+      rotate_block(rPoints, block, blockType, i);
+      for (int j=0; j<4; j++) {
+        block[j] = rPoints[j];
+      }
     }
   }
 }
@@ -537,8 +538,8 @@ static void deinit(void) {
     persist_write_data(GRID_COL_KEY, grid_col, sizeof(grid_col));
     persist_write_int(BLOCK_TYPE_KEY, blockType);
     persist_write_int(NEXT_BLOCK_TYPE_KEY, nextBlockType);
-    persist_write_int(BLOCK_X_KEY, blockX);
-    persist_write_int(BLOCK_Y_KEY, blockY);
+    persist_write_int(BLOCK_X_KEY, block[0].x);
+    persist_write_int(BLOCK_Y_KEY, block[0].y);
     persist_write_int(ROTATION_KEY, rotation);
     persist_write_bool(HAS_SAVE_KEY, true);
   }
