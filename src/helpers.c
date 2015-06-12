@@ -83,7 +83,10 @@ void make_block (GPoint *create_block, int type, int bX, int bY) {
 // Yeah, I had to map these out on paper.
 void rotate_block (GPoint *new_block, GPoint *old_block, int block_type, int rotation) {
   if (block_type == SQUARE) {
-    // Haha, yeah no.
+    new_block[0] = old_block[0];
+    new_block[1] = old_block[1];
+    new_block[2] = old_block[2];
+    new_block[3] = old_block[3];
   }
   else if (block_type == LINE) {
     if (rotation == 0) {
