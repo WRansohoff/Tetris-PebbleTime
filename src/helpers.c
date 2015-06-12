@@ -262,6 +262,23 @@ int find_max_drop (GPoint *block, uint8_t grid[10][20]) {
   return drop_amount;
 }
 
+int find_max_horiz_move (GPoint *block, uint8_t grid[10][20], bool direction) {
+  bool can_move = true;
+  int move_amount = 0;
+  int move_dir = direction ? 1 : -1;
+  while (can_move) {
+    for (int i=0; i<4; i++) {
+      int side = block[i].x + move_dir * (1 + move_amount);
+      if (side < 0 || side > 9) { can_move = false; }
+      if (grid[side][block[i].y]) { can_move = false; }
+    }
+    if (can_move) {
+      move_amount += 1;
+    }
+  }
+  return move_amount;
+}
+
 // Just to make the 'next block' display nice and centered.
 int next_block_offset (int block_type) {
   if (block_type == T) { return 0; }

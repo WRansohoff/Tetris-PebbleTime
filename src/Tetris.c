@@ -42,9 +42,9 @@ static bool lost = false;
 static bool can_load = false;
 static bool load_choice = false;
 static int rotation = 0;
-static int max_tick = 500;
+static int max_tick = 600;
 static int tick_time;
-static int tick_interval = 30;
+static int tick_interval = 40;
 static int blockType = -1;
 static int nextBlockType = -1;
 static int blockX = 5;
@@ -311,12 +311,30 @@ static void back_click_handler(ClickRecognizerRef recognizer, void *context) {
   layer_add_child(window_layer, text_layer_get_layer(paused_label_layer));
 }
 
+static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (!playing || paused) { return; }
+  int moveAmt = find_max_horiz_move(block, grid, LEFT);
+  for (int i=0; i<4; i++) {
+    block[i].x -= moveAmt;
+  }
+}
+
+static void down_long_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (!playing || paused) { return; }
+  int moveAmt = find_max_horiz_move(block, grid, RIGHT);
+  for (int i=0; i<4; i++) {
+    block[i].x += moveAmt;
+  }
+}
+
 static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
   window_single_click_subscribe(BUTTON_ID_BACK, back_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_UP, 350, up_long_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 350, down_long_click_handler, NULL);
 }
 
 static void draw_left_pane(Layer *layer, GContext *ctx) {

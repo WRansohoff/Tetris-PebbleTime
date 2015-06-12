@@ -19,6 +19,9 @@
 #define Z      5
 #define T      6
 
+#define LEFT  false
+#define RIGHT true
+
 char *itoa10 (int value, char *result);
 
 void update_num_layer (int num, char *str, TextLayer *layer);
@@ -28,6 +31,8 @@ void make_block (GPoint *create_block, int type, int bX, int bY);
 void rotate_block (GPoint *new_block, GPoint *old_block, int block_type, int rotation);
 
 int find_max_drop (GPoint *block, uint8_t grid[10][20]);
+
+int find_max_horiz_move (GPoint *block, uint8_t grid[10][20], bool direction);
 
 int next_block_offset (int block_type);
 
