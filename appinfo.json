@@ -3,7 +3,7 @@
   "shortName": "Tetris",
   "longName": "Tetris for Pebble Time",
   "companyName": "WRansohoff",
-  "versionLabel": "1.0",
+  "versionLabel": "1.1",
   "sdkVersion": "3",
   "targetPlatforms": ["basalt"],
   "watchapp": {
