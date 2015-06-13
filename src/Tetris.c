@@ -171,7 +171,7 @@ static void drop_block() {
 }
 
 static void game_tick(void *data) {
-  if (paused) { return; }
+  if (paused || !playing || lost) { return; }
 
   drop_block();
   s_timer = app_timer_register(tick_time, game_tick, NULL);
@@ -209,6 +209,7 @@ static void load_game() {
   // We already know that we have valid data (can_load).
   lines_cleared = persist_read_int(SCORE_KEY);
   level = (lines_cleared / 10) + 1;
+  if (level > 10) { level = 10; }
   update_num_layer(lines_cleared, scoreStr, score_layer);
   update_num_layer(level, levelStr, level_layer);
   tick_time = max_tick - (tick_interval * level);
@@ -220,7 +221,7 @@ static void load_game() {
   blockY = persist_read_int(BLOCK_Y_KEY);
   make_block(block, blockType, blockX, blockY);
   make_block(nextBlock, nextBlockType, nextBlockX, nextBlockY);
-  rotation = persist_read_int(ROTATION_KEY);
+  rotation = persist_read_int(ROTATION_KEY)-1;
   if (rotation != 0) {
     for (int i=0; i<rotation; i++) {
       GPoint rPoints[4];
@@ -627,9 +628,18 @@ static void deinit(void) {
     persist_write_data(GRID_COL_KEY, grid_col, sizeof(grid_col));
     persist_write_int(BLOCK_TYPE_KEY, blockType);
     persist_write_int(NEXT_BLOCK_TYPE_KEY, nextBlockType);
+    persist_write_int(ROTATION_KEY, rotation);
+    // Normalize the block position for saving. We'll replay the rotation on load.
+    while (rotation != 0) {
+      GPoint new_points[4];
+      rotate_block(new_points, block, blockType, rotation);
+      for (int i=0; i<4; i++) {
+        block[i] = new_points[i];
+      }
+      rotation = (rotation+1)%4;
+    }
     persist_write_int(BLOCK_X_KEY, block[0].x);
     persist_write_int(BLOCK_Y_KEY, block[0].y);
-    persist_write_int(ROTATION_KEY, rotation);
     persist_write_bool(HAS_SAVE_KEY, true);
   }
   else if (lost) {
