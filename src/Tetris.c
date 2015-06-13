@@ -230,6 +230,7 @@ static void restart_after_loss() {
   }
   blockType = -1;
   nextBlockType = -1;
+  load_choice = false;
   Layer *window_layer = window_get_root_layer(window);
   layer_add_child(window_layer, text_layer_get_layer(title_layer));
   text_layer_set_text(title_layer, "Tetris");
@@ -367,8 +368,8 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_BACK, back_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 500, select_long_click_handler, NULL);
-  window_long_click_subscribe(BUTTON_ID_UP, 350, up_long_click_handler, NULL);
-  window_long_click_subscribe(BUTTON_ID_DOWN, 350, down_long_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_UP, 250, up_long_click_handler, NULL);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 250, down_long_click_handler, NULL);
 }
 
 static void draw_left_pane(Layer *layer, GContext *ctx) {
