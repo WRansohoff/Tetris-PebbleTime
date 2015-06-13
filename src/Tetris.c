@@ -37,7 +37,6 @@ static GPoint nextBlock[4];
 static bool playing = false;
 static bool paused = false;
 static bool pauseFromFocus = false;
-static bool fastfall = false;
 static bool lost = false;
 static bool can_load = false;
 static bool load_choice = false;
@@ -54,7 +53,6 @@ static int nextBlockY = 0;
 static int lines_cleared = 0;
 static int level = 1;
 static AppTimer *s_timer = NULL;
-static AppTimer *s_fall_timer = NULL;
 
 static char scoreStr[10];
 static char levelStr[10];
@@ -72,7 +70,10 @@ static void drop_block() {
     blockType = nextBlockType;
     nextBlockType = rand() % 7;
     rotation = 0;
-    blockX = 5;
+    int adjust = 0;
+    if (blockType == Z || blockType == J) { adjust = -1; }
+    if (blockType == LINE) { adjust = -2; }
+    blockX = 5 + adjust;
     blockY = 0;
     nextBlockX = 0;
     nextBlockY = 0;
@@ -102,7 +103,6 @@ static void drop_block() {
       }
       layer_mark_dirty(s_bg_layer);
       blockType = -1;
-      fastfall = false;
       // Clear rows if possible.
       for (int j=0; j<20; j++) {
         bool isRow = true;
@@ -138,6 +138,8 @@ static void drop_block() {
           playing = false;
           lost = true;
           Layer *window_layer = window_get_root_layer(window);
+          layer_remove_from_parent(s_bg_layer);
+          layer_remove_from_parent(s_left_pane_layer);
           layer_add_child(window_layer, text_layer_get_layer(title_layer));
           text_layer_set_text(title_layer, "You lost!");
           text_layer_set_text(score_label_layer, "");
@@ -166,6 +168,8 @@ static void game_tick(void *data) {
 static void setup_game() {
     playing = true;
     Layer *window_layer = window_get_root_layer(window);
+    layer_add_child(window_layer, s_bg_layer);
+    layer_add_child(window_layer, s_left_pane_layer);
     layer_remove_from_parent(s_title_pane_layer);
     layer_remove_from_parent(text_layer_get_layer(new_game_label_layer));
     layer_remove_from_parent(text_layer_get_layer(load_game_label_layer));
@@ -179,7 +183,9 @@ static void setup_game() {
     text_layer_set_text(level_label_layer, "Level");
     update_num_layer(level, levelStr, level_layer);
     tick_time = max_tick;
+    rotation = 0;
     nextBlockType = rand() % 7;
+    drop_block();
     layer_mark_dirty(s_bg_layer);
     layer_mark_dirty(s_left_pane_layer);
 }
@@ -213,7 +219,31 @@ static void load_game() {
   }
 }
 
+static void restart_after_loss() {
+  lost = false;
+  can_load = false;
+  for (int i=0; i<10; i++) {
+    for (int j=0; j<20; j++) {
+      grid[i][j] = false;
+      grid_col[i][j] = 255;
+    }
+  }
+  blockType = -1;
+  nextBlockType = -1;
+  Layer *window_layer = window_get_root_layer(window);
+  layer_add_child(window_layer, text_layer_get_layer(title_layer));
+  text_layer_set_text(title_layer, "Tetris");
+  layer_add_child(window_layer, text_layer_get_layer(new_game_label_layer));
+  layer_add_child(window_layer, s_title_pane_layer);
+  layer_mark_dirty(s_title_pane_layer);
+}
+
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (!playing && lost) {
+    restart_after_loss();
+    return;
+  }
+
   if (!playing && !lost) {
     setup_game();
     if (can_load && load_choice) {
@@ -305,6 +335,10 @@ static void select_long_click_handler(ClickRecognizerRef recognizer, void *conte
 }
 
 static void back_click_handler(ClickRecognizerRef recognizer, void *context) {
+  if (!playing && lost) {
+    restart_after_loss();
+    return;
+  }
   if (!playing || paused) { window_stack_pop(true); }
   paused = true;
   Layer *window_layer = window_get_root_layer(window);
@@ -461,11 +495,9 @@ static void window_load(Window *window) {
 
   s_bg_layer = layer_create(GRect(0, 0, 144, 168));
   layer_set_update_proc(s_bg_layer, draw_bg);
-  layer_add_child(window_layer, s_bg_layer);
 
   s_left_pane_layer = layer_create(GRect(0, 0, 80, 168));
   layer_set_update_proc(s_left_pane_layer, draw_left_pane);
-  layer_add_child(window_layer, s_left_pane_layer);
 
   s_title_pane_layer = layer_create(GRect(0, 0, 144, 168));
   layer_set_update_proc(s_title_pane_layer, draw_title_pane);
