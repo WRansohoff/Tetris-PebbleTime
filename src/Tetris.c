@@ -221,8 +221,9 @@ static void load_game() {
   blockY = persist_read_int(BLOCK_Y_KEY);
   make_block(block, blockType, blockX, blockY);
   make_block(nextBlock, nextBlockType, nextBlockX, nextBlockY);
-  rotation = persist_read_int(ROTATION_KEY)-1;
+  rotation = persist_read_int(ROTATION_KEY);
   if (rotation != 0) {
+    rotation -= 1;
     for (int i=0; i<rotation; i++) {
       GPoint rPoints[4];
       rotate_block(rPoints, block, blockType, i);
