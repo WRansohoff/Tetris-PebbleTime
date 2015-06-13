@@ -196,6 +196,8 @@ static void setup_game() {
     text_layer_set_text(level_label_layer, "Level");
     update_num_layer(level, levelStr, level_layer);
     tick_time = max_tick;
+    level = 0;
+    lines_cleared = 0;
     rotation = 0;
     nextBlockType = rand() % 7;
     drop_block();
@@ -236,6 +238,7 @@ static void load_game() {
 static void restart_after_loss() {
   lost = false;
   can_load = false;
+  s_timer = NULL;
   for (int i=0; i<10; i++) {
     for (int j=0; j<20; j++) {
       grid[i][j] = false;
