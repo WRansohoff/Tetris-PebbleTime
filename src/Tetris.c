@@ -12,6 +12,7 @@ const uint32_t BLOCK_X_KEY = 2163;
 const uint32_t BLOCK_Y_KEY = 1523;
 const uint32_t ROTATION_KEY = 8278;
 const uint32_t HAS_SAVE_KEY = 4510;
+const uint32_t HIGH_SCORE_KEY = 3735928559;
 
 // Sorry some of the variable names are a little weird.
 // I'm going to try to come back and clean this up a bit.
@@ -24,6 +25,7 @@ static TextLayer *score_layer;
 static TextLayer *level_label_layer;
 static TextLayer *level_layer;
 static TextLayer *paused_label_layer;
+static TextLayer *high_score_layer;
 static GPath *selector_path;
 
 static uint8_t grid[10][20];
@@ -56,6 +58,8 @@ static AppTimer *s_timer = NULL;
 
 static char scoreStr[10];
 static char levelStr[10];
+static char high_score_buffer[10];
+static char high_score_str[22];
 static Layer *s_bg_layer = NULL;
 static Layer *s_left_pane_layer = NULL;
 static Layer *s_title_pane_layer = NULL;
@@ -150,6 +154,14 @@ static void drop_block() {
           // No need to get fancy; just mark 'has save' false since
           // we'll re-create the whole thing when it gets set to true.
           persist_write_bool(HAS_SAVE_KEY, false);
+          // High score?
+          if (!persist_exists(HIGH_SCORE_KEY) ||
+              lines_cleared > persist_read_int(HIGH_SCORE_KEY)) {
+            persist_write_int(HIGH_SCORE_KEY, lines_cleared);
+            layer_add_child(window_layer, text_layer_get_layer(high_score_layer));
+            text_layer_set_text(high_score_layer, "New high score!");
+          }
+          return;
         }
       }
     }
@@ -173,6 +185,7 @@ static void setup_game() {
     layer_remove_from_parent(s_title_pane_layer);
     layer_remove_from_parent(text_layer_get_layer(new_game_label_layer));
     layer_remove_from_parent(text_layer_get_layer(load_game_label_layer));
+    layer_remove_from_parent(text_layer_get_layer(high_score_layer));
     layer_add_child(window_layer, text_layer_get_layer(score_label_layer));
     layer_add_child(window_layer, text_layer_get_layer(score_layer));
     layer_add_child(window_layer, text_layer_get_layer(level_label_layer));
@@ -236,6 +249,17 @@ static void restart_after_loss() {
   text_layer_set_text(title_layer, "Tetris");
   layer_add_child(window_layer, text_layer_get_layer(new_game_label_layer));
   layer_add_child(window_layer, s_title_pane_layer);
+  layer_add_child(window_layer, text_layer_get_layer(high_score_layer));
+  if (persist_exists(HIGH_SCORE_KEY)) {
+    itoa10(persist_read_int(HIGH_SCORE_KEY), high_score_buffer);
+  }
+  else {
+    itoa10(0, high_score_buffer);
+  }
+  // Fool strcat into thinking the string is empty.
+  high_score_str[0] = '\0';
+  strcat(high_score_str, "High score: ");
+  text_layer_set_text(high_score_layer, strcat(high_score_str, high_score_buffer));
   layer_mark_dirty(s_title_pane_layer);
 }
 
@@ -494,6 +518,19 @@ static void window_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(load_game_label_layer));
   }
 
+  high_score_layer = text_layer_create((GRect) { .origin = { 0, 132 }, .size = { bounds.size.w, 20 } });
+  if (persist_exists(HIGH_SCORE_KEY)) {
+    itoa10(persist_read_int(HIGH_SCORE_KEY), high_score_buffer);
+  }
+  else {
+    itoa10(0, high_score_buffer);
+  }
+  high_score_str[0] = '\0';
+  strcat(high_score_str, "High score: ");
+  text_layer_set_text(high_score_layer, strcat(high_score_str, high_score_buffer));
+  text_layer_set_text_alignment(high_score_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(high_score_layer));
+
   s_bg_layer = layer_create(GRect(0, 0, 144, 168));
   layer_set_update_proc(s_bg_layer, draw_bg);
 
@@ -534,6 +571,7 @@ static void window_unload(Window *window) {
   text_layer_destroy(level_label_layer);
   text_layer_destroy(level_layer);
   text_layer_destroy(paused_label_layer);
+  text_layer_destroy(high_score_layer);
   layer_destroy(s_bg_layer);
   layer_destroy(s_left_pane_layer);
   layer_destroy(s_title_pane_layer);
