@@ -190,14 +190,14 @@ static void setup_game() {
     layer_add_child(window_layer, text_layer_get_layer(score_layer));
     layer_add_child(window_layer, text_layer_get_layer(level_label_layer));
     layer_add_child(window_layer, text_layer_get_layer(level_layer));
+    level = 0;
+    lines_cleared = 0;
     text_layer_set_text(title_layer, "");
     text_layer_set_text(score_label_layer, "Score");
     update_num_layer(lines_cleared, scoreStr, score_layer);
     text_layer_set_text(level_label_layer, "Level");
     update_num_layer(level, levelStr, level_layer);
     tick_time = max_tick;
-    level = 0;
-    lines_cleared = 0;
     rotation = 0;
     nextBlockType = rand() % 7;
     drop_block();
