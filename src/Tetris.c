@@ -223,7 +223,6 @@ static void load_game() {
   make_block(nextBlock, nextBlockType, nextBlockX, nextBlockY);
   rotation = persist_read_int(ROTATION_KEY);
   if (rotation != 0) {
-    rotation -= 1;
     for (int i=0; i<rotation; i++) {
       GPoint rPoints[4];
       rotate_block(rPoints, block, blockType, i);
@@ -280,6 +279,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
       drop_block();
       s_timer = app_timer_register(tick_time, game_tick, NULL);
     }
+    return;
   }
 
   if (paused) {
