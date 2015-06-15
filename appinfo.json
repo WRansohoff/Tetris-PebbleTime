@@ -10,6 +10,7 @@
         "media": [
             {
                 "file": "images/Logo_28.png",
+                "menuIcon": true,
                 "name": "LOGO28",
                 "type": "png"
             },
