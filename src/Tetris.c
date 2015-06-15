@@ -500,10 +500,10 @@ static void draw_bg(Layer *layer, GContext *ctx) {
 static void draw_title_pane(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   GPoint selector[3];
-  int xOff = 20;
+  int xOff = 20; // kamotswolf - Needed for better arrow alignment
   int yOff = load_choice * 20;
   if(load_choice == 1) xOff = 24;
-  if(load_choice == 2) xOff = 0;
+  if(load_choice == 2) xOff = 0; // kamotswolf - TODO, text needs to not move when option toggled
   selector[0] = GPoint(xOff + 6, 61 + yOff);
   selector[1] = GPoint(xOff + 6, 69 + yOff);
   selector[2] = GPoint(xOff + 16, 65 + yOff);
