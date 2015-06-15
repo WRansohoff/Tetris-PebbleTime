@@ -13,7 +13,7 @@ const uint32_t BLOCK_Y_KEY = 1523;
 const uint32_t ROTATION_KEY = 8278;
 const uint32_t HAS_SAVE_KEY = 4510;
 const uint32_t HIGH_SCORE_KEY = 3735928559;
-const uint32_t OPTION_SHADOWS_KEY = 3535929778;
+const uint32_t OPTION_SHADOWS_KEY = 3535929778; // kamotswolf - do/could other apps share these key numbers?
 
 // Sorry some of the variable names are a little weird.
 // I'm going to try to come back and clean this up a bit.
@@ -62,8 +62,8 @@ static char scoreStr[10];
 static char levelStr[10];
 static char high_score_buffer[10];
 static char high_score_str[22];
-static bool option_shadows_buffer = true;
-static char option_shadows_str[23];
+static bool option_shadows_buffer = true; // kamotswolf - is this really a buffer, maybe different name?
+static char option_shadows_str[23]; // also don't know why this is even needed
 static Layer *s_bg_layer = NULL;
 static Layer *s_left_pane_layer = NULL;
 static Layer *s_title_pane_layer = NULL;
@@ -289,7 +289,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
-  if (!playing && (load_choice == 2)) {
+  if (!playing && (load_choice == 2)) { // kamotswolf - had to modify several things in here to add new option
     option_shadows_buffer = !option_shadows_buffer;
     persist_write_bool(OPTION_SHADOWS_KEY, option_shadows_buffer);
     option_shadows_str[0] = '\0';
@@ -428,7 +428,7 @@ static void draw_left_pane(Layer *layer, GContext *ctx) {
   if (!playing || blockType == -1) { return; }
 
   // Fast-drop is instant, so we need to show a guide.
-  if(option_shadows_buffer) {
+  if(option_shadows_buffer) { // kamotswolf - don't display the guide if option is false ("OFF")
     graphics_context_set_fill_color(ctx, gray);
     int max_drop = find_max_drop (block, grid);
       for (int i=0; i<4; i++) {
@@ -550,7 +550,7 @@ static void window_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(load_game_label_layer));
   }
   
-  // Kamots - Add option to toggle drop shadow
+  // kamotswolf - Add option to toggle drop shadow. Had to move all things around on the screen.
   option_shadows_layer = text_layer_create((GRect) { .origin = { 0, 96 }, .size = { bounds.size.w, 20 } });
   if (persist_exists(OPTION_SHADOWS_KEY)) {
     option_shadows_buffer = persist_read_bool(OPTION_SHADOWS_KEY);
