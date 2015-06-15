@@ -9,14 +9,14 @@
     "resources": {
         "media": [
             {
+                "file": "images/Logo_28.png",
+                "name": "LOGO28",
+                "type": "png"
+            },
+            {
                 "file": "data/LICENSE",
                 "name": "LICENSE",
                 "type": "raw"
-            },
-            {
-                "file": "images/Logo_28bw.png",
-                "name": "LOGO",
-                "type": "png"
             }
         ]
     },
