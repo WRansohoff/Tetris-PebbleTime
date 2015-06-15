@@ -13,6 +13,7 @@ const uint32_t BLOCK_Y_KEY = 1523;
 const uint32_t ROTATION_KEY = 8278;
 const uint32_t HAS_SAVE_KEY = 4510;
 const uint32_t HIGH_SCORE_KEY = 3735928559;
+const uint32_t OPTION_SHADOWS_KEY = 3535929778;
 
 // Sorry some of the variable names are a little weird.
 // I'm going to try to come back and clean this up a bit.
@@ -25,6 +26,7 @@ static TextLayer *score_layer;
 static TextLayer *level_label_layer;
 static TextLayer *level_layer;
 static TextLayer *paused_label_layer;
+static TextLayer *option_shadows_layer;
 static TextLayer *high_score_layer;
 static GPath *selector_path;
 
@@ -41,7 +43,7 @@ static bool paused = false;
 static bool pauseFromFocus = false;
 static bool lost = false;
 static bool can_load = false;
-static bool load_choice = false;
+static int load_choice = 0;
 static int rotation = 0;
 static int max_tick = 600;
 static int tick_time;
@@ -60,6 +62,8 @@ static char scoreStr[10];
 static char levelStr[10];
 static char high_score_buffer[10];
 static char high_score_str[22];
+static bool option_shadows_buffer = true;
+static char option_shadows_str[23];
 static Layer *s_bg_layer = NULL;
 static Layer *s_left_pane_layer = NULL;
 static Layer *s_title_pane_layer = NULL;
@@ -247,7 +251,7 @@ static void restart_after_loss() {
   }
   blockType = -1;
   nextBlockType = -1;
-  load_choice = false;
+  load_choice = 0;
   Layer *window_layer = window_get_root_layer(window);
   layer_add_child(window_layer, text_layer_get_layer(title_layer));
   text_layer_set_text(title_layer, "Tetris");
@@ -268,14 +272,14 @@ static void restart_after_loss() {
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!playing && lost) {
+  if (!playing && lost && (load_choice == 0)) {
     restart_after_loss();
     return;
   }
 
-  if (!playing && !lost) {
+  if (!playing && !lost && (load_choice < 2)) {
     setup_game();
-    if (can_load && load_choice) {
+    if (can_load && (load_choice == 1)) {
       load_game();
     }
     if (!s_timer) {
@@ -285,6 +289,21 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
+  if (!playing && (load_choice == 2)) {
+    option_shadows_buffer = !option_shadows_buffer;
+    persist_write_bool(OPTION_SHADOWS_KEY, option_shadows_buffer);
+    option_shadows_str[0] = '\0';
+    strcat(option_shadows_str, "Drop Shadows ");
+    if(option_shadows_buffer) {
+      text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, " ON"));
+    }
+    else {
+      text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, "OFF"));
+    }
+    layer_mark_dirty(s_title_pane_layer);
+    return;
+  }
+  
   if (paused) {
     paused = false;
     s_timer = app_timer_register(tick_time, game_tick, NULL);
@@ -312,8 +331,10 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!playing && can_load) {
-    load_choice = !load_choice;
+  if (!playing) {
+    if(load_choice == 1) load_choice = 0;
+    if((load_choice == 2) && (can_load)) load_choice = 1;
+    else load_choice = 0;
     layer_mark_dirty(s_title_pane_layer);
   }
   if (!playing || paused) { return; }
@@ -335,8 +356,10 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!playing && can_load) {
-    load_choice = !load_choice;
+  if (!playing) {
+    if(load_choice == 1) load_choice = 2;
+    if((load_choice == 0) && (can_load)) load_choice = 1;
+    else load_choice = 2;
     layer_mark_dirty(s_title_pane_layer);
   }
   if (!playing || paused) { return; }
@@ -405,13 +428,14 @@ static void draw_left_pane(Layer *layer, GContext *ctx) {
   if (!playing || blockType == -1) { return; }
 
   // Fast-drop is instant, so we need to show a guide.
-  graphics_context_set_fill_color(ctx, gray);
-  int max_drop = find_max_drop (block, grid);
-  for (int i=0; i<4; i++) {
-    GRect brick_ghost = GRect(block[i].x*8, (block[i].y + max_drop)*8, 8, 8);
-    graphics_fill_rect(ctx, brick_ghost, 0, GCornerNone);
+  if(option_shadows_buffer) {
+    graphics_context_set_fill_color(ctx, gray);
+    int max_drop = find_max_drop (block, grid);
+      for (int i=0; i<4; i++) {
+      GRect brick_ghost = GRect(block[i].x*8, (block[i].y + max_drop)*8, 8, 8);
+      graphics_fill_rect(ctx, brick_ghost, 0, GCornerNone);
+    }
   }
-
   // Draw the actual block.
   graphics_context_set_stroke_color(ctx, GColorBlack);
   graphics_context_set_fill_color(ctx, col_map[blockType]);
@@ -476,10 +500,13 @@ static void draw_bg(Layer *layer, GContext *ctx) {
 static void draw_title_pane(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   GPoint selector[3];
-  int yOff = load_choice ? 30 : 0;
-  selector[0] = GPoint(26, 78 + yOff);
-  selector[1] = GPoint(26, 86 + yOff);
-  selector[2] = GPoint(36, 82 + yOff);
+  int xOff = 20;
+  int yOff = load_choice * 20;
+  if(load_choice == 1) xOff = 24;
+  if(load_choice == 2) xOff = 0;
+  selector[0] = GPoint(xOff + 6, 61 + yOff);
+  selector[1] = GPoint(xOff + 6, 69 + yOff);
+  selector[2] = GPoint(xOff + 16, 65 + yOff);
   GPathInfo selector_path_info = { 3, selector };
   selector_path = gpath_create(&selector_path_info);
   gpath_draw_filled(ctx, selector_path);
@@ -506,24 +533,43 @@ static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  title_layer = text_layer_create((GRect) { .origin = { 0, 32 }, .size = { bounds.size.w, 20 } });
+  title_layer = text_layer_create((GRect) { .origin = { 0, 16 }, .size = { bounds.size.w, 20 } });
   text_layer_set_text(title_layer, "Tetris");
   text_layer_set_text_alignment(title_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(title_layer));
 
-  new_game_label_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 20 } });
+  new_game_label_layer = text_layer_create((GRect) { .origin = { 0, 56 }, .size = { bounds.size.w, 20 } });
   text_layer_set_text(new_game_label_layer, "New Game");
   text_layer_set_text_alignment(new_game_label_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(new_game_label_layer));
 
-  load_game_label_layer = text_layer_create((GRect) { .origin = { 0, 102 }, .size = { bounds.size.w, 20 } });
+  load_game_label_layer = text_layer_create((GRect) { .origin = { 0, 76 }, .size = { bounds.size.w, 20 } });
   text_layer_set_text(load_game_label_layer, "Continue");
   text_layer_set_text_alignment(load_game_label_layer, GTextAlignmentCenter);
   if (can_load) {
     layer_add_child(window_layer, text_layer_get_layer(load_game_label_layer));
   }
-
-  high_score_layer = text_layer_create((GRect) { .origin = { 0, 132 }, .size = { bounds.size.w, 20 } });
+  
+  // Kamots - Add option to toggle drop shadow
+  option_shadows_layer = text_layer_create((GRect) { .origin = { 0, 96 }, .size = { bounds.size.w, 20 } });
+  if (persist_exists(OPTION_SHADOWS_KEY)) {
+    option_shadows_buffer = persist_read_bool(OPTION_SHADOWS_KEY);
+  }
+  else {
+    option_shadows_buffer = true;
+  }
+  option_shadows_str[0] = '\0';
+  strcat(option_shadows_str, "Drop Shadows ");
+  if(option_shadows_buffer) {
+    text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, "ON"));
+  }
+  else {
+    text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, "OFF"));
+  }
+  text_layer_set_text_alignment(option_shadows_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(option_shadows_layer));
+  
+  high_score_layer = text_layer_create((GRect) { .origin = { 0, 126 }, .size = { bounds.size.w, 20 } });
   if (persist_exists(HIGH_SCORE_KEY)) {
     itoa10(persist_read_int(HIGH_SCORE_KEY), high_score_buffer);
   }
