@@ -13,7 +13,9 @@ const uint32_t BLOCK_Y_KEY = 1523;
 const uint32_t ROTATION_KEY = 8278;
 const uint32_t HAS_SAVE_KEY = 4510;
 const uint32_t HIGH_SCORE_KEY = 3735928559;
-const uint32_t OPTION_SHADOWS_KEY = 3535929778; // kamotswolf - do/could other apps share these key numbers?
+const uint32_t OPTION_SHADOWS_KEY = 3535929778;
+// kamotswolf - do/could other apps share these key numbers?
+// WRansohoff - I don't think so; based on the documentation, it sounds like they are not shared across apps.
 
 // Sorry some of the variable names are a little weird.
 // I'm going to try to come back and clean this up a bit.
@@ -43,6 +45,7 @@ static bool paused = false;
 static bool pauseFromFocus = false;
 static bool lost = false;
 static bool can_load = false;
+static bool option_shadows_buffer;
 static int load_choice = 0;
 static int rotation = 0;
 static int max_tick = 600;
@@ -62,8 +65,6 @@ static char scoreStr[10];
 static char levelStr[10];
 static char high_score_buffer[10];
 static char high_score_str[22];
-static bool option_shadows_buffer = true; // kamotswolf - is this really a buffer, maybe different name?
-static char option_shadows_str[23]; // also don't know why this is even needed
 static Layer *s_bg_layer = NULL;
 static Layer *s_left_pane_layer = NULL;
 static Layer *s_title_pane_layer = NULL;
@@ -190,6 +191,7 @@ static void setup_game() {
     layer_remove_from_parent(text_layer_get_layer(new_game_label_layer));
     layer_remove_from_parent(text_layer_get_layer(load_game_label_layer));
     layer_remove_from_parent(text_layer_get_layer(high_score_layer));
+    layer_remove_from_parent(text_layer_get_layer(option_shadows_layer));
     layer_add_child(window_layer, text_layer_get_layer(score_label_layer));
     layer_add_child(window_layer, text_layer_get_layer(score_layer));
     layer_add_child(window_layer, text_layer_get_layer(level_label_layer));
@@ -256,8 +258,9 @@ static void restart_after_loss() {
   layer_add_child(window_layer, text_layer_get_layer(title_layer));
   text_layer_set_text(title_layer, "Tetris");
   layer_add_child(window_layer, text_layer_get_layer(new_game_label_layer));
-  layer_add_child(window_layer, s_title_pane_layer);
   layer_add_child(window_layer, text_layer_get_layer(high_score_layer));
+  layer_add_child(window_layer, text_layer_get_layer(option_shadows_layer));
+  layer_add_child(window_layer, s_title_pane_layer);
   if (persist_exists(HIGH_SCORE_KEY)) {
     itoa10(persist_read_int(HIGH_SCORE_KEY), high_score_buffer);
   }
@@ -272,7 +275,7 @@ static void restart_after_loss() {
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!playing && lost && (load_choice == 0)) {
+  if (!playing && lost) {
     restart_after_loss();
     return;
   }
@@ -292,15 +295,13 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (!playing && (load_choice == 2)) { // kamotswolf - had to modify several things in here to add new option
     option_shadows_buffer = !option_shadows_buffer;
     persist_write_bool(OPTION_SHADOWS_KEY, option_shadows_buffer);
-    option_shadows_str[0] = '\0';
-    strcat(option_shadows_str, "Drop Shadows ");
     if(option_shadows_buffer) {
-      text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, " ON"));
+      text_layer_set_text(option_shadows_layer, "Drop Shadows ON");
     }
     else {
-      text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, "OFF"));
+      text_layer_set_text(option_shadows_layer, "Drop Shadows OFF");
     }
-    layer_mark_dirty(s_title_pane_layer);
+    //layer_mark_dirty(s_title_pane_layer);
     return;
   }
   
@@ -331,7 +332,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!playing) {
+  if (!playing && !lost) {
     if(load_choice == 1) load_choice = 0;
     if((load_choice == 2) && (can_load)) load_choice = 1;
     else load_choice = 0;
@@ -356,7 +357,7 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (!playing) {
+  if (!playing && !lost) {
     if(load_choice == 1) load_choice = 2;
     if((load_choice == 0) && (can_load)) load_choice = 1;
     else load_choice = 2;
@@ -503,7 +504,7 @@ static void draw_title_pane(Layer *layer, GContext *ctx) {
   int xOff = 20; // kamotswolf - Needed for better arrow alignment
   int yOff = load_choice * 20;
   if(load_choice == 1) xOff = 24;
-  if(load_choice == 2) xOff = 0; // kamotswolf - TODO, text needs to not move when option toggled
+  if(load_choice == 2) xOff = 0;
   selector[0] = GPoint(xOff + 6, 61 + yOff);
   selector[1] = GPoint(xOff + 6, 69 + yOff);
   selector[2] = GPoint(xOff + 16, 65 + yOff);
@@ -558,13 +559,11 @@ static void window_load(Window *window) {
   else {
     option_shadows_buffer = true;
   }
-  option_shadows_str[0] = '\0';
-  strcat(option_shadows_str, "Drop Shadows ");
   if(option_shadows_buffer) {
-    text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, "ON"));
+    text_layer_set_text(option_shadows_layer, "Drop Shadows ON");
   }
   else {
-    text_layer_set_text(option_shadows_layer, strcat(option_shadows_str, "OFF"));
+    text_layer_set_text(option_shadows_layer, "Drop Shadows OFF");
   }
   text_layer_set_text_alignment(option_shadows_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(option_shadows_layer));
@@ -622,6 +621,7 @@ static void window_unload(Window *window) {
   text_layer_destroy(level_label_layer);
   text_layer_destroy(level_layer);
   text_layer_destroy(paused_label_layer);
+  text_layer_destroy(option_shadows_layer);
   text_layer_destroy(high_score_layer);
   layer_destroy(s_bg_layer);
   layer_destroy(s_left_pane_layer);

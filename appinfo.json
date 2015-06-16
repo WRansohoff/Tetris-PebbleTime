@@ -1,34 +1,24 @@
 {
-    "appKeys": {},
-    "capabilities": [
-        ""
-    ],
-    "companyName": "WRansohoff",
-    "longName": "Tetris for Pebble Time",
-    "projectType": "native",
-    "resources": {
-        "media": [
-            {
-                "file": "images/Logo_28.png",
-                "menuIcon": true,
-                "name": "LOGO28",
-                "type": "png"
-            },
-            {
-                "file": "data/LICENSE",
-                "name": "LICENSE",
-                "type": "raw"
-            }
-        ]
-    },
-    "sdkVersion": "3",
-    "shortName": "Tebbletris",
-    "targetPlatforms": [
-        "basalt"
-    ],
-    "uuid": "9980fd08-2437-4489-813b-cbe8ae824d9c",
-    "versionLabel": "1.3",
-    "watchapp": {
-        "watchface": false
-    }
+  "uuid": "9980fd08-2437-4489-813b-cbe8ae824d9c",
+  "shortName": "Tebbletris",
+  "longName": "Tetris for Pebble Time",
+  "companyName": "WRansohoff",
+  "versionLabel": "1.3",
+  "sdkVersion": "3",
+  "targetPlatforms": ["basalt"],
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": [
+      {
+        "file": "data/LICENSE",
+        "name": "LICENSE",
+        "type": "raw"
+      }
+    ]
+  }
 }
