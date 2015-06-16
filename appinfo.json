@@ -1,9 +1,9 @@
 {
   "uuid": "9980fd08-2437-4489-813b-cbe8ae824d9c",
-  "shortName": "Tetris",
+  "shortName": "Tebbletris",
   "longName": "Tetris for Pebble Time",
   "companyName": "WRansohoff",
-  "versionLabel": "1.2",
+  "versionLabel": "1.3",
   "sdkVersion": "3",
   "targetPlatforms": ["basalt"],
   "watchapp": {
@@ -13,6 +13,12 @@
     "dummy": 0
   },
   "resources": {
-    "media": []
+    "media": [
+      {
+        "file": "data/LICENSE",
+        "name": "LICENSE",
+        "type": "raw"
+      }
+    ]
   }
 }
