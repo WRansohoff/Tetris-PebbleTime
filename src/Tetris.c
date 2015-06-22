@@ -17,11 +17,6 @@ const uint32_t ROTATION_KEY = 8278;
 const uint32_t HAS_SAVE_KEY = 4510;
 const uint32_t HIGH_SCORE_KEY = 3735928559;
 const uint32_t OPTION_SHADOWS_KEY = 3535929778;
-<<<<<<< HEAD
-// kamotswind - do/could other apps share these key numbers?
-// WRansohoff - I don't think so; based on the documentation, it sounds like they are not shared across apps.
-=======
->>>>>>> origin/master
 
 // Sorry some of the variable names are a little weird.
 // I'm going to try to come back and clean this up a bit.
