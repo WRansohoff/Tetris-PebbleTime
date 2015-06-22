@@ -18,7 +18,7 @@ const uint32_t HAS_SAVE_KEY = 4510;
 const uint32_t HIGH_SCORE_KEY = 3735928559;
 const uint32_t OPTION_SHADOWS_KEY = 3535929778;
 <<<<<<< HEAD
-// kamotswolf - do/could other apps share these key numbers?
+// kamotswind - do/could other apps share these key numbers?
 // WRansohoff - I don't think so; based on the documentation, it sounds like they are not shared across apps.
 =======
 >>>>>>> origin/master
@@ -298,7 +298,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
-  if (!playing && (load_choice == 2)) { // kamotswolf - had to modify several things in here to add new option
+  if (!playing && (load_choice == 2)) { // kamotswind - had to modify several things in here to add new option
     option_shadows_buffer = !option_shadows_buffer;
     persist_write_bool(OPTION_SHADOWS_KEY, option_shadows_buffer);
     if(option_shadows_buffer) {
@@ -434,7 +434,7 @@ static void draw_left_pane(Layer *layer, GContext *ctx) {
   if (!playing || blockType == -1) { return; }
 
   // Fast-drop is instant, so we need to show a guide.
-  if(option_shadows_buffer) { // kamotswolf - don't display the guide if option is false ("OFF")
+  if(option_shadows_buffer) { // kamotswind - don't display the guide if option is false ("OFF")
     graphics_context_set_fill_color(ctx, gray);
     int max_drop = find_max_drop (block, grid);
       for (int i=0; i<4; i++) {
@@ -506,7 +506,7 @@ static void draw_bg(Layer *layer, GContext *ctx) {
 static void draw_title_pane(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   GPoint selector[3];
-  int xOff = 20; // kamotswolf - Needed for better arrow alignment
+  int xOff = 20; // kamotswind - Needed for better arrow alignment
   int yOff = load_choice * 20;
   if(load_choice == 1) xOff = 24;
   if(load_choice == 2) xOff = 0;
@@ -556,7 +556,7 @@ static void window_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(load_game_label_layer));
   }
   
-  // kamotswolf - Add option to toggle drop shadow. Had to move all things around on the screen.
+  // kamotswind - Add option to toggle drop shadow. Had to move all things around on the screen.
   option_shadows_layer = text_layer_create((GRect) { .origin = { 0, 96 }, .size = { bounds.size.w, 20 } });
   if (persist_exists(OPTION_SHADOWS_KEY)) {
     option_shadows_buffer = persist_read_bool(OPTION_SHADOWS_KEY);
