@@ -1,3 +1,6 @@
+/* Copyright (c) 2015, WRansohoff
+ * MIT License, see LICENSE file for details.
+ */
 #include <pebble.h>
 
 #include "helpers.h"
@@ -14,8 +17,6 @@ const uint32_t ROTATION_KEY = 8278;
 const uint32_t HAS_SAVE_KEY = 4510;
 const uint32_t HIGH_SCORE_KEY = 3735928559;
 const uint32_t OPTION_SHADOWS_KEY = 3535929778;
-// kamotswolf - do/could other apps share these key numbers?
-// WRansohoff - I don't think so; based on the documentation, it sounds like they are not shared across apps.
 
 // Sorry some of the variable names are a little weird.
 // I'm going to try to come back and clean this up a bit.
@@ -211,7 +212,7 @@ static void setup_game() {
     layer_mark_dirty(s_left_pane_layer);
 }
 
-// This should probably go in the helper file with the save logic.
+// TODO This should probably go in the helper file with the save logic.
 // But it's late and I want to get saving/loading working.
 static void load_game() {
   // We already know that we have valid data (can_load).
@@ -292,7 +293,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     return;
   }
 
-  if (!playing && (load_choice == 2)) { // kamotswolf - had to modify several things in here to add new option
+  if (!playing && (load_choice == 2)) { // kamotswind - had to modify several things in here to add new option
     option_shadows_buffer = !option_shadows_buffer;
     persist_write_bool(OPTION_SHADOWS_KEY, option_shadows_buffer);
     if(option_shadows_buffer) {
@@ -301,7 +302,6 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
     else {
       text_layer_set_text(option_shadows_layer, "Drop Shadows OFF");
     }
-    //layer_mark_dirty(s_title_pane_layer);
     return;
   }
   
@@ -429,7 +429,7 @@ static void draw_left_pane(Layer *layer, GContext *ctx) {
   if (!playing || blockType == -1) { return; }
 
   // Fast-drop is instant, so we need to show a guide.
-  if(option_shadows_buffer) { // kamotswolf - don't display the guide if option is false ("OFF")
+  if(option_shadows_buffer) { // kamotswind - don't display the guide if option is false ("OFF")
     graphics_context_set_fill_color(ctx, gray);
     int max_drop = find_max_drop (block, grid);
       for (int i=0; i<4; i++) {
@@ -501,7 +501,7 @@ static void draw_bg(Layer *layer, GContext *ctx) {
 static void draw_title_pane(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorBlack);
   GPoint selector[3];
-  int xOff = 20; // kamotswolf - Needed for better arrow alignment
+  int xOff = 20; // kamotswind - Needed for better arrow alignment
   int yOff = load_choice * 20;
   if(load_choice == 1) xOff = 24;
   if(load_choice == 2) xOff = 0;
@@ -551,7 +551,7 @@ static void window_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(load_game_label_layer));
   }
   
-  // kamotswolf - Add option to toggle drop shadow. Had to move all things around on the screen.
+  // kamotswind - Add option to toggle drop shadow. Had to move all things around on the screen.
   option_shadows_layer = text_layer_create((GRect) { .origin = { 0, 96 }, .size = { bounds.size.w, 20 } });
   if (persist_exists(OPTION_SHADOWS_KEY)) {
     option_shadows_buffer = persist_read_bool(OPTION_SHADOWS_KEY);
@@ -612,7 +612,7 @@ static void window_load(Window *window) {
 
 static void window_unload(Window *window) {
   app_focus_service_unsubscribe();
-
+  // TODO / REMINDER - Add any new objects here for destruction on exit!
   text_layer_destroy(title_layer);
   text_layer_destroy(new_game_label_layer);
   text_layer_destroy(load_game_label_layer);

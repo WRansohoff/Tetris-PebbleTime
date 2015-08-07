@@ -10,4 +10,4 @@ Added in v1.1-1.3:
 - High score
 - More bug fixes
 - Restart after losing without quitting the app
-- (Credit: kamotswolf) Option to toggle drop shadows.
+- (Credit: kamotswind) Option to toggle drop shadows.
